@@ -2,56 +2,18 @@ package algos;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Arrays;
-
 import org.junit.jupiter.api.Test;
 
+import net.jqwik.api.Arbitraries;
+import net.jqwik.api.Arbitrary;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
-import net.jqwik.api.constraints.Size;
+import net.jqwik.api.Provide;
 
 /**
  * Unit test for simple App.
  */
 public class PairwiseProductTest {
-
-    @Test
-    void whenExcludingRandomIndexInList() {
-        Long[] sample = { 100L, 200L, 300L, 50L };
-        var maxResult = PairwiseProduct.maxValExcludingIndex(sample, 2);
-        assertEquals(200L, maxResult[1]);
-        assertEquals(1L, maxResult[0]);
-    }
-
-    @Test
-    void whenExcludingFirstElement() {
-        Long[] sample = { 1000L, 200L, 300L, 50L };
-        var maxResult = PairwiseProduct.maxValExcludingIndex(sample, 0);
-        assertEquals(300L, maxResult[1]);
-        assertEquals(2L, maxResult[0]);
-    }
-
-    @Test
-    void whenEmptyList() {
-        Long[] sample = {};
-        var maxResult = PairwiseProduct.maxValExcludingIndex(sample, 2);
-        assertEquals(0, maxResult.length);
-    }
-
-    @Test
-    void whenExcludingOnlyElement() {
-        Long[] sample = { 100L };
-        var maxResult = PairwiseProduct.maxValExcludingIndex(sample, 0);
-        assertEquals(0, maxResult.length);
-    }
-
-    @Property
-    void equivalentToMax(@ForAll @Size(min=2, max=200) Long[] numberList) {
-        var maxResponse = PairwiseProduct.maxValExcludingIndex(numberList);
-        var anotherNumberList = Arrays.copyOf(numberList, numberList.length);
-        Arrays.sort(anotherNumberList);
-        assertEquals(anotherNumberList[numberList.length - 1], maxResponse[1]);
-    }
 
     /**
      * Given:
@@ -61,8 +23,7 @@ public class PairwiseProductTest {
      */
     @Test
     void whenAllNumbersDifferentInList() {
-        Long[] sample = { 100L, 4L, 2L, 1L };
-        assertEquals(400L, PairwiseProduct.maxProduct(sample));
+        assertEquals(400L, PairwiseProduct.maxProduct(new long[] { 100L, 1L, 2L, 4L }));
     }
 
     /**
@@ -73,8 +34,18 @@ public class PairwiseProductTest {
      */
     @Test
     void whenMaxValueIsDuplicated() {
-        Long[] sample = { 10L, 10L, 1L, 1L };
-        assertEquals(100L, PairwiseProduct.maxProduct(sample));
+        assertEquals(100L, PairwiseProduct.maxProduct(new long[] { 10L, 10L, 1L, 1L }));
+    }
+
+    /**
+     * Given:
+     * - An array with duplicated second max value
+     * Then:
+     * - Computes correctly max pairwise product
+     */
+    @Test
+    void whenSecondMaxValueIsDuplicated() {
+        assertEquals(70L, PairwiseProduct.maxProduct(new long[] { 10L, 7L, 2L, 7L }));
     }
 
     /**
@@ -83,9 +54,19 @@ public class PairwiseProductTest {
      * Then:
      * - Matches with the implementation in all sample cases
      */
+    @Provide
+    Arbitrary<long[]> positiveArrays() {
+       return Arbitraries.longs()
+           .greaterOrEqual(0L)
+           .lessOrEqual(200000L)
+           .array(long[].class)
+           .ofMinSize(2)
+           .ofMaxSize(200);
+    }
+
     @Property
-    void equivalentToNaive(@ForAll @Size(min=2, max=200) Long[] numberList) {
-        assertEquals(PairwiseProduct.maxProduct(numberList),
+    void equivalentToNaive(@ForAll("positiveArrays") long[] numberList) {
+        assertEquals(PairwiseProduct.naiveMaxProduct(numberList),
                      PairwiseProduct.maxProduct(numberList));
     }
 }
